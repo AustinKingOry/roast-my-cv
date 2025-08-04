@@ -22,7 +22,7 @@ export async function analyzeCVWithAI(request: CVAnalysisRequest) {
   const systemPrompt = buildSystemPrompt(roastTone, focusAreas, showEmojis, userContext)
   const userPrompt = buildAnalysisPrompt(cvText)
 
-  return await generateObject({
+  const result = await generateObject({
     model,
     system: systemPrompt,
     prompt: userPrompt,
@@ -30,6 +30,8 @@ export async function analyzeCVWithAI(request: CVAnalysisRequest) {
     temperature: roastTone === "heavy" ? 0.8 : 0.6,
     maxOutputTokens: 2048,
   })
+
+  return result
 }
 
 export async function streamCVAnalysis(request: CVAnalysisRequest) {
@@ -38,7 +40,7 @@ export async function streamCVAnalysis(request: CVAnalysisRequest) {
   const systemPrompt = buildSystemPrompt(roastTone, focusAreas, showEmojis, userContext)
   const userPrompt = buildAnalysisPrompt(cvText)
 
-  return streamObject({
+  const result = streamObject({
     model,
     system: systemPrompt,
     prompt: userPrompt,
@@ -46,26 +48,32 @@ export async function streamCVAnalysis(request: CVAnalysisRequest) {
     temperature: roastTone === "heavy" ? 0.8 : 0.6,
     maxOutputTokens: 2048,
   })
+
+  return result
 }
 
 export async function getQuickCVScore(cvText: string) {
   const prompt = buildQuickScorePrompt(cvText)
 
-  return await generateObject({
+  const result = await generateObject({
     model,
     prompt,
     schema: QuickScoreSchema,
     temperature: 0.3,
   })
+
+  return result
 }
 
 export async function generateCVImprovements(cvText: string, targetRole: string, industry: string) {
   const prompt = buildImprovementPrompt(cvText, targetRole, industry)
 
-  return await generateObject({
+  const result = await generateObject({
     model,
     prompt,
     schema: CVImprovementSchema,
     temperature: 0.5,
   })
+
+  return result
 }
