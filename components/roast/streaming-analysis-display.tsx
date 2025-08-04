@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FeedbackCard } from "./feedback-card"
 import { MarketReadinessScore } from "./market-readiness-score"
-import { CheckCircle, Loader2 } from "lucide-react"
+import { CheckCircle, Loader2, Zap } from "lucide-react"
 import type { StreamingCVAnalysisResult } from "@/hooks/use-streaming-cv-analysis"
 
 interface StreamingAnalysisDisplayProps {
@@ -16,7 +16,7 @@ interface StreamingAnalysisDisplayProps {
 }
 
 export function StreamingAnalysisDisplay({ result, showEmojis, roastTone }: StreamingAnalysisDisplayProps) {
-  const { overall, feedback, marketReadiness, kenyanJobMarketTips, metadata, isComplete } = result
+  const { overall, feedback, marketReadiness, kenyanJobMarketTips, metadata, isComplete, usage } = result
 
   return (
     <div className="space-y-6">
@@ -31,7 +31,13 @@ export function StreamingAnalysisDisplay({ result, showEmojis, roastTone }: Stre
             {!isComplete && (
               <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
                 <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                Analyzing...
+                Streaming...
+              </Badge>
+            )}
+            {isComplete && usage && (
+              <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-600 border-emerald-200">
+                <Zap className="w-3 h-3 mr-1" />
+                {usage.totalTokens} tokens
               </Badge>
             )}
           </h2>
@@ -74,6 +80,12 @@ export function StreamingAnalysisDisplay({ result, showEmojis, roastTone }: Stre
             <CardTitle className="flex items-center gap-2">
               <Skeleton className="w-5 h-5 rounded" />
               <Skeleton className="w-48 h-6" />
+              {!isComplete && (
+                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                  Calculating score...
+                </Badge>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -107,6 +119,12 @@ export function StreamingAnalysisDisplay({ result, showEmojis, roastTone }: Stre
               <span className="text-white text-sm relative z-10">🤖</span>
             </div>
             Overall Assessment - AI Career Mentor
+            {!overall && !isComplete && (
+              <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                Generating...
+              </Badge>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="relative z-10">
@@ -139,7 +157,7 @@ export function StreamingAnalysisDisplay({ result, showEmojis, roastTone }: Stre
           {!isComplete && (
             <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
               <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-              Loading feedback...
+              Streaming feedback...
             </Badge>
           )}
         </h3>
@@ -183,6 +201,24 @@ export function StreamingAnalysisDisplay({ result, showEmojis, roastTone }: Stre
             ))}
         </div>
       </div>
+
+      {/* Token Usage Display (for development/debugging) */}
+      {isComplete && usage && (
+        <Card className="border-gray-200 bg-gray-50/50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between text-sm text-gray-600">
+              <span>AI Usage:</span>
+              <div className="flex items-center gap-4">
+                <span>Prompt: {usage.promptTokens} tokens</span>
+                <span>•</span>
+                <span>Response: {usage.completionTokens} tokens</span>
+                <span>•</span>
+                <span className="font-medium">Total: {usage.totalTokens} tokens</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
