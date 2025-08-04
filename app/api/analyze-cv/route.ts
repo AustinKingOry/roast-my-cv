@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { parseCV } from "@/lib/cv-parser"
-import { analyzeCVWithGemini } from "@/lib/gemini"
+import { analyzeCVWithAI } from "@/lib/ai-services"
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,6 +9,11 @@ export async function POST(request: NextRequest) {
     const roastTone = formData.get("roastTone") as "light" | "heavy"
     const focusAreas = JSON.parse(formData.get("focusAreas") as string)
     const showEmojis = formData.get("showEmojis") === "true"
+
+    // Optional user context
+    const targetRole = formData.get("targetRole") as string | null
+    const experience = formData.get("experience") as "entry" | "mid" | "senior" | null
+    const industry = formData.get("industry") as string | null
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 })
@@ -37,20 +42,35 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse the CV
+    const startTime = Date.now()
     const parsedCV = await parseCV(file)
 
-    // Analyze with Gemini
-    const analysis = await analyzeCVWithGemini({
+    // Prepare user context
+    const userContext =
+      targetRole || experience || industry
+        ? {
+            targetRole: targetRole || undefined,
+            experience: experience || undefined,
+            industry: industry || undefined,
+          }
+        : undefined
+
+    // Analyze with AI SDK
+    const result = await analyzeCVWithAI({
       cvText: parsedCV.text,
       roastTone,
       focusAreas,
       showEmojis,
+      userContext,
     })
+
+    const processingTime = (Date.now() - startTime) / 1000
 
     return NextResponse.json({
       success: true,
       data: {
-        ...analysis,
+        ...result.object,
+        processingTime,
         metadata: parsedCV.metadata,
       },
     })
