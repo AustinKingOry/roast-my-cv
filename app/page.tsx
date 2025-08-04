@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Download, Share2, AlertCircle, RotateCcw, ChevronRight, Zap, Heart, Sparkles } from "lucide-react"
+import { string } from "zod/v4"
 
 type RoastTone = "light" | "heavy"
 
@@ -114,9 +115,9 @@ Made with ❤️ for African job seekers
   }
 
   const handleShare = async () => {
-    const isStreamingResult = "isComplete" in result
-    const score = isStreamingResult ? result.marketReadiness?.score : result?.marketReadiness.score
-    const tokens = isStreamingResult ? result.usage?.totalTokens : result?.usage?.totalTokens
+    const isStreamingResult = result ? "isComplete" in result : false
+    const score = isStreamingResult ? result?.marketReadiness?.score : result?.marketReadiness?.score
+    const tokens = isStreamingResult ? result?.usage?.totalTokens : result?.usage?.totalTokens
 
     const shareData = {
       title: "My CV just got roasted by AI! 🔥",
@@ -205,7 +206,7 @@ Made with ❤️ for African job seekers
                     onFileUpload={handleFileUpload}
                     isUploading={isAnalyzing}
                     uploadProgress={uploadProgress}
-                    error={error?.message || error}
+                    error={error ? (typeof(error) == "string" ? error : error.message) : "error"}
                     disabled={isAnalyzing}
                   />
 
@@ -374,7 +375,7 @@ Made with ❤️ for African job seekers
                   <Button
                     onClick={handleDownload}
                     className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 relative overflow-hidden"
-                    disabled={isStreamingResult && !result.isComplete}
+                    disabled={isStreamingResult ? !result.isComplete : false}
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download Feedback
