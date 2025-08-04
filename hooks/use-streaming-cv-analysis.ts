@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useCallback } from "react"
-// import { readDataStream } from "@ai/rsc"
 import type { CVAnalysis } from "@/lib/ai-config"
 
 export interface StreamingCVAnalysisResult {
@@ -108,27 +107,59 @@ export function useStreamingCVAnalysis() {
         const metadata = metadataHeader ? JSON.parse(metadataHeader) : undefined
 
         // Read the streaming response using AI SDK v5
-        const dataStream = readDataStream(response.body!)
+        const reader = response.body?.getReader()
+        const decoder = new TextDecoder()
 
-        for await (const chunk of dataStream) {
-          if (chunk.type === "object") {
-            const partialResult = chunk.object as Partial<CVAnalysis>
-            setResult((prev) => ({
-              ...prev,
-              ...partialResult,
-              metadata,
-              isComplete: false,
-            }))
-          } else if (chunk.type === "finish") {
-            setResult((prev) => ({
-              ...prev,
-              isComplete: true,
-              usage: chunk.usage,
-            }))
-          } else if (chunk.type === "error") {
-            throw new Error(chunk.error)
+        if (!reader) {
+          throw new Error("No response body")
+        }
+
+        let buffer = ""
+        let finalUsage: any = null
+
+        while (true) {
+          const { done, value } = await reader.read()
+
+          if (done) break
+
+          buffer += decoder.decode(value, { stream: true })
+
+          // Process complete JSON objects from the buffer
+          const lines = buffer.split("\n")
+          buffer = lines.pop() || "" // Keep incomplete line in buffer
+
+          for (const line of lines) {
+            if (line.trim()) {
+              try {
+                const chunk = JSON.parse(line)
+
+                if (chunk.type === "object") {
+                  const partialResult = chunk.object as Partial<CVAnalysis>
+                  setResult((prev) => ({
+                    ...prev,
+                    ...partialResult,
+                    metadata,
+                    isComplete: false,
+                  }))
+                } else if (chunk.type === "finish") {
+                  finalUsage = chunk.usage
+                } else if (chunk.type === "error") {
+                  throw new Error(chunk.error)
+                }
+              } catch (parseError) {
+                // Handle partial JSON chunks - continue reading
+                console.warn("Failed to parse chunk:", parseError)
+              }
+            }
           }
         }
+
+        // Mark as complete with final usage
+        setResult((prev) => ({
+          ...prev,
+          isComplete: true,
+          usage: finalUsage,
+        }))
       } catch (err) {
         const error = err as Error
         setError(error.message)

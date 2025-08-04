@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
           }
         : undefined
 
-    // Analyze with AI SDK
+    // Analyze with AI SDK v5
     const result = await analyzeCVWithAI({
       cvText: parsedCV.text,
       roastTone,
@@ -72,6 +72,8 @@ export async function POST(request: NextRequest) {
         ...result.object,
         processingTime,
         metadata: parsedCV.metadata,
+        usage: result.usage,
+        finishReason: result.finishReason,
       },
     })
   } catch (error) {

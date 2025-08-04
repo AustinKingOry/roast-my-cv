@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FeedbackCard } from "./feedback-card"
 import { MarketReadinessScore } from "./market-readiness-score"
-import { CheckCircle, Loader2, Zap } from "lucide-react"
+import { CheckCircle, Zap, Activity } from "lucide-react"
 import type { StreamingCVAnalysisResult } from "@/hooks/use-streaming-cv-analysis"
 
 interface StreamingAnalysisDisplayProps {
@@ -30,8 +30,8 @@ export function StreamingAnalysisDisplay({ result, showEmojis, roastTone }: Stre
             </Badge>
             {!isComplete && (
               <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
-                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                Streaming...
+                <Activity className="w-3 h-3 mr-1 animate-pulse" />
+                Streaming live...
               </Badge>
             )}
             {isComplete && usage && (
@@ -57,14 +57,32 @@ export function StreamingAnalysisDisplay({ result, showEmojis, roastTone }: Stre
                 {isComplete ? (
                   <CheckCircle className="w-4 h-4 text-emerald-500" />
                 ) : (
-                  <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
+                  <Activity className="w-4 h-4 text-blue-500 animate-pulse" />
                 )}
-                <span>{isComplete ? "Analysis complete" : "Processing..."}</span>
+                <span>{isComplete ? "Analysis complete" : "Streaming results..."}</span>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Streaming Progress Indicator */}
+      {!isComplete && (
+        <Card className="border-blue-200 bg-gradient-to-r from-blue-50/50 to-emerald-50/30">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Activity className="w-5 h-5 text-blue-600 animate-pulse" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-blue-800">AI is analyzing your CV in real-time...</p>
+                <p className="text-xs text-blue-600">Results will appear as they're generated</p>
+              </div>
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                AI SDK v5
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Market Readiness Score */}
       {marketReadiness ? (
@@ -82,7 +100,7 @@ export function StreamingAnalysisDisplay({ result, showEmojis, roastTone }: Stre
               <Skeleton className="w-48 h-6" />
               {!isComplete && (
                 <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
-                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                  <Activity className="w-3 h-3 mr-1 animate-pulse" />
                   Calculating score...
                 </Badge>
               )}
@@ -121,7 +139,7 @@ export function StreamingAnalysisDisplay({ result, showEmojis, roastTone }: Stre
             Overall Assessment - AI Career Mentor
             {!overall && !isComplete && (
               <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
-                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                <Activity className="w-3 h-3 mr-1 animate-pulse" />
                 Generating...
               </Badge>
             )}
@@ -156,7 +174,7 @@ export function StreamingAnalysisDisplay({ result, showEmojis, roastTone }: Stre
           </Badge>
           {!isComplete && (
             <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
-              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+              <Activity className="w-3 h-3 mr-1 animate-pulse" />
               Streaming feedback...
             </Badge>
           )}
@@ -207,7 +225,10 @@ export function StreamingAnalysisDisplay({ result, showEmojis, roastTone }: Stre
         <Card className="border-gray-200 bg-gray-50/50">
           <CardContent className="p-4">
             <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>AI Usage:</span>
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4" />
+                <span>AI Usage (AI SDK v5):</span>
+              </div>
               <div className="flex items-center gap-4">
                 <span>Prompt: {usage.promptTokens} tokens</span>
                 <span>•</span>
