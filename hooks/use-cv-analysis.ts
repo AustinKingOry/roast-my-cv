@@ -10,7 +10,14 @@ export interface CVAnalysisResult {
     category: string
     severity: "low" | "medium" | "high"
     tip?: string
+    kenyanContext?: string
   }>
+  marketReadiness: {
+    score: number
+    strengths: string[]
+    priorities: string[]
+  }
+  kenyanJobMarketTips: string[]
   processingTime: number
   metadata: {
     fileName: string
@@ -19,6 +26,12 @@ export interface CVAnalysisResult {
     pageCount?: number
     wordCount: number
   }
+  usage?: {
+    promptTokens: number
+    completionTokens: number
+    totalTokens: number
+  }
+  finishReason?: string
 }
 
 export interface CVAnalysisError {
