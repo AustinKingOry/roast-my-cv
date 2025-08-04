@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
           }
         : undefined
 
-    // Stream analysis with AI SDK
+    // Stream analysis with AI SDK v5
     const result = await streamCVAnalysis({
       cvText: parsedCV.text,
       roastTone,
@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
     return result.toTextStreamResponse({
       headers: {
         "X-CV-Metadata": JSON.stringify(parsedCV.metadata),
+        "Content-Type": "application/json",
       },
     })
   } catch (error) {

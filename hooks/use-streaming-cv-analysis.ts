@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { readStreamableValue } from "ai/rsc"
+// import { readDataStream } from "@ai/rsc"
 import type { CVAnalysis } from "@/lib/ai-config"
 
 export interface StreamingCVAnalysisResult {
@@ -28,6 +28,11 @@ export interface StreamingCVAnalysisResult {
     wordCount: number
   }
   isComplete: boolean
+  usage?: {
+    promptTokens: number
+    completionTokens: number
+    totalTokens: number
+  }
 }
 
 export interface UserContext {
@@ -102,28 +107,28 @@ export function useStreamingCVAnalysis() {
         const metadataHeader = response.headers.get("X-CV-Metadata")
         const metadata = metadataHeader ? JSON.parse(metadataHeader) : undefined
 
-        // Read the streaming response
-        const stream = readStreamableValue(response.body)
+        // Read the streaming response using AI SDK v5
+        const dataStream = readDataStream(response.body!)
 
-        for await (const chunk of stream) {
-          if (chunk) {
-            try {
-              const partialResult = JSON.parse(chunk) as Partial<CVAnalysis>
-              setResult((prev) => ({
-                ...prev,
-                ...partialResult,
-                metadata,
-                isComplete: false,
-              }))
-            } catch (parseError) {
-              // Handle partial JSON chunks
-              console.warn("Failed to parse chunk:", parseError)
-            }
+        for await (const chunk of dataStream) {
+          if (chunk.type === "object") {
+            const partialResult = chunk.object as Partial<CVAnalysis>
+            setResult((prev) => ({
+              ...prev,
+              ...partialResult,
+              metadata,
+              isComplete: false,
+            }))
+          } else if (chunk.type === "finish") {
+            setResult((prev) => ({
+              ...prev,
+              isComplete: true,
+              usage: chunk.usage,
+            }))
+          } else if (chunk.type === "error") {
+            throw new Error(chunk.error)
           }
         }
-
-        // Mark as complete
-        setResult((prev) => ({ ...prev, isComplete: true }))
       } catch (err) {
         const error = err as Error
         setError(error.message)
