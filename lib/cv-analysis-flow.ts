@@ -1,5 +1,6 @@
 import { ai } from "./genkit-config"
-import { z } from "zod"
+import { z } from "zod";
+import { dynamicTool, generateObject } from 'ai';
 
 // Define the schema for CV analysis request
 const CVAnalysisRequestSchema = z.object({
@@ -53,100 +54,100 @@ export type FeedbackPoint = z.infer<typeof FeedbackPointSchema>
 
 // Create the CV analysis flow
 export const analyzeCVFlow = ai.defineFlow(
-  {
-    name: "analyzeCVFlow",
-    inputSchema: CVAnalysisRequestSchema,
-    outputSchema: CVAnalysisResponseSchema,
-  },
-  async (input) => {
-    const { cvText, roastTone, focusAreas, showEmojis, userContext } = input
+	{
+		name: "analyzeCVFlow",
+		inputSchema: CVAnalysisRequestSchema,
+		outputSchema: CVAnalysisResponseSchema,
+	},
+	async (input) => {
+		const { cvText, roastTone, focusAreas, showEmojis, userContext } = input
 
-    // Build the system prompt with Kenyan context
-    const systemPrompt = `
-You are an AI career mentor specifically designed for Kenyan and East African job seekers. You understand:
+		// Build the system prompt with Kenyan context
+		const systemPrompt = `
+		You are an AI career mentor specifically designed for Kenyan and East African job seekers. You understand:
 
-KENYAN JOB MARKET CONTEXT:
-- NGO and UN applications (formal, impact-focused)
-- Government positions (structured, qualification-heavy)
-- Banking & telecommunications (professional, tech-savvy)
-- Startup ecosystem (agile, skill-focused)
-- Local professional challenges (device compatibility, formatting, etc.)
+		KENYAN JOB MARKET CONTEXT:
+		- NGO and UN applications (formal, impact-focused)
+		- Government positions (structured, qualification-heavy)
+		- Banking & telecommunications (professional, tech-savvy)
+		- Startup ecosystem (agile, skill-focused)
+		- Local professional challenges (device compatibility, formatting, etc.)
 
-PERSONALITY:
-You're like a knowledgeable big sibling - direct, caring, and culturally aware. Use local expressions naturally:
-- "Bro/Bana" for friendly address
-- Local analogies: "matatu routes", "Gikomba market", "Kamiti Road traffic"
-- Kenyan workplace references: "M-Pesa", "Safaricom", "KCB", "Equity Bank"
+		PERSONALITY:
+		You're like a knowledgeable big sibling - direct, caring, and culturally aware. Use local expressions naturally:
+		- "Bro/Bana" for friendly address
+		- Local analogies: "matatu routes", "Gikomba market", "Kamiti Road traffic"
+		- Kenyan workplace references: "M-Pesa", "Safaricom", "KCB", "Equity Bank"
 
-TONE INSTRUCTIONS:
-${
-  roastTone === "light"
-    ? `
-LIGHT ROAST ☕:
-- Encouraging and supportive like advice from a caring big sister
-- Gentle humor with constructive framing
-- "Your CV has potential, let's polish it!"
-- Focus on growth opportunities
-`
-    : `
-HEAVY ROAST 🔥:
-- Brutally honest but still helpful
-- Direct language with strong local analogies
-- "Your CV is like a matatu from the 90s - functional but not pretty!"
-- Call out obvious mistakes without sugar-coating
-`
-}
+		TONE INSTRUCTIONS:
+		${
+		roastTone === "light"
+			? `
+		LIGHT ROAST ☕:
+		- Encouraging and supportive like advice from a caring big sister
+		- Gentle humor with constructive framing
+		- "Your CV has potential, let's polish it!"
+		- Focus on growth opportunities
+		`
+			: `
+		HEAVY ROAST 🔥:
+		- Brutally honest but still helpful
+		- Direct language with strong local analogies
+		- "Your CV is like a matatu from the 90s - functional but not pretty!"
+		- Call out obvious mistakes without sugar-coating
+		`
+		}
 
-FOCUS AREAS: ${focusAreas.length > 0 ? focusAreas.join(", ") : "General analysis"}
+		FOCUS AREAS: ${focusAreas.length > 0 ? focusAreas.join(", ") : "General analysis"}
 
-EMOJI USAGE: ${showEmojis ? "Include relevant emojis throughout" : "No emojis in response"}
+		EMOJI USAGE: ${showEmojis ? "Include relevant emojis throughout" : "No emojis in response"}
 
-${
-  userContext
-    ? `
-USER CONTEXT:
-- Target Role: ${userContext.targetRole || "Not specified"}
-- Experience Level: ${userContext.experience || "Not specified"}  
-- Industry: ${userContext.industry || "Not specified"}
-`
-    : ""
-}
+		${
+		userContext
+			? `
+		USER CONTEXT:
+		- Target Role: ${userContext.targetRole || "Not specified"}
+		- Experience Level: ${userContext.experience || "Not specified"}  
+		- Industry: ${userContext.industry || "Not specified"}
+		`
+			: ""
+		}
 
-ANALYSIS REQUIREMENTS:
-1. Provide 4-6 specific, actionable feedback points
-2. Each point must include a creative title with local analogies
-3. Include practical tips relevant to Kenyan job market
-4. Assess market readiness with a score (0-100)
-5. Highlight top 3 strengths and top 3 priorities
-6. Provide 3 Kenya-specific job market tips
+		ANALYSIS REQUIREMENTS:
+		1. Provide 4-6 specific, actionable feedback points
+		2. Each point must include a creative title with local analogies
+		3. Include practical tips relevant to Kenyan job market
+		4. Assess market readiness with a score (0-100)
+		5. Highlight top 3 strengths and top 3 priorities
+		6. Provide 3 Kenya-specific job market tips
 
-Remember: Be authentic, helpful, and culturally relevant while maintaining professional value.
-`
+		Remember: Be authentic, helpful, and culturally relevant while maintaining professional value.
+		`
 
-    const userPrompt = `
-Analyze this CV and provide structured feedback:
+		const userPrompt = `
+		Analyze this CV and provide structured feedback:
 
-CV CONTENT:
-${cvText}
+		CV CONTENT:
+		${cvText}
 
-Provide your analysis in the exact JSON structure specified in the output schema.
-`
+		Provide your analysis in the exact JSON structure specified in the output schema.
+		`
 
-    const response = await ai.generate({
-      model: "googleai/gemini-1.5-flash",
-      system: systemPrompt,
-      prompt: userPrompt,
-      output: {
-        schema: CVAnalysisResponseSchema,
-      },
-      config: {
-        temperature: roastTone === "heavy" ? 0.8 : 0.6,
-        maxOutputTokens: 2048,
-      },
-    })
+		const response = await ai.generate({
+		model: "googleai/gemini-1.5-flash",
+		system: systemPrompt,
+		prompt: userPrompt,
+		output: {
+			schema: CVAnalysisResponseSchema,
+		},
+		config: {
+			temperature: roastTone === "heavy" ? 0.8 : 0.6,
+			maxOutputTokens: 2048,
+		},
+		})
 
-    return response.output
-  },
+		return response.output
+	},
 )
 
 // Helper flow for quick CV scoring
@@ -204,16 +205,15 @@ export const generateCVImprovementsFlow = ai.defineFlow(
     }),
   },
   async (input) => {
-    const response = await ai.generate({
+    const response = await generateObject({
       model: "googleai/gemini-1.5-flash",
       prompt: `
-Analyze this CV and suggest specific improvements for a ${input.targetRole} role in ${input.industry} in Kenya:
+		Analyze this CV and suggest specific improvements for a ${input.targetRole} role in ${input.industry} in Kenya:
 
-CV: ${input.cvText}
+		CV: ${input.cvText}
 
-Provide before/after examples for key sections that need improvement.
-`,
-      output: {
+		Provide before/after examples for key sections that need improvement.
+		`,
         schema: z.object({
           improvements: z.array(
             z.object({
@@ -224,9 +224,20 @@ Provide before/after examples for key sections that need improvement.
             }),
           ),
         }),
-      },
+    //   output: {
+    //     schema: z.object({
+    //       improvements: z.array(
+    //         z.object({
+    //           section: z.string(),
+    //           current: z.string(),
+    //           improved: z.string(),
+    //           reasoning: z.string(),
+    //         }),
+    //       ),
+    //     }),
+    //   },
     })
 
-    return response.output
+    return response.object
   },
 )
