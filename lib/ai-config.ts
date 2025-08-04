@@ -6,9 +6,7 @@ if (!process.env.GEMINI_API_KEY) {
 }
 
 // Configure the Google AI model
-export const model = google("gemini-1.5-flash", {
-  apiKey: process.env.GEMINI_API_KEY,
-})
+export const model = google("gemini-2.5-flash")
 
 // Define schemas for structured outputs
 export const FeedbackPointSchema = z.object({
