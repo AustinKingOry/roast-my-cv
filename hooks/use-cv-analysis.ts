@@ -26,6 +26,12 @@ export interface CVAnalysisError {
   code?: string
 }
 
+export interface UserContext {
+  targetRole?: string
+  experience?: "entry" | "mid" | "senior"
+  industry?: string
+}
+
 export function useCVAnalysis() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [result, setResult] = useState<CVAnalysisResult | null>(null)
@@ -39,6 +45,7 @@ export function useCVAnalysis() {
         roastTone: "light" | "heavy"
         focusAreas: string[]
         showEmojis: boolean
+        userContext?: UserContext
       },
     ) => {
       setIsAnalyzing(true)
@@ -52,6 +59,17 @@ export function useCVAnalysis() {
         formData.append("roastTone", options.roastTone)
         formData.append("focusAreas", JSON.stringify(options.focusAreas))
         formData.append("showEmojis", options.showEmojis.toString())
+
+        // Add user context if provided
+        if (options.userContext?.targetRole) {
+          formData.append("targetRole", options.userContext.targetRole)
+        }
+        if (options.userContext?.experience) {
+          formData.append("experience", options.userContext.experience)
+        }
+        if (options.userContext?.industry) {
+          formData.append("industry", options.userContext.industry)
+        }
 
         // Simulate upload progress
         const progressInterval = setInterval(() => {
