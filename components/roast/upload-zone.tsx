@@ -11,10 +11,10 @@ import { Progress } from "@/components/ui/progress"
 
 interface UploadZoneProps {
   onFileUpload: (file: File) => void
-  isUploading?: boolean
+  isUploading?: boolean // Indicates if an upload/analysis is in progress
   uploadProgress?: number
   error?: string | null
-  disabled?: boolean
+  disabled?: boolean // This prop is passed from page.tsx and is equivalent to isAnalyzing
 }
 
 export function UploadZone({
@@ -22,7 +22,7 @@ export function UploadZone({
   isUploading = false,
   uploadProgress = 0,
   error,
-  disabled,
+  disabled, // This 'disabled' prop is typically 'isAnalyzing' from the parent
 }: UploadZoneProps) {
   const [isDragOver, setIsDragOver] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
@@ -53,6 +53,7 @@ export function UploadZone({
   const handleDragOver = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault()
+      // Only allow drag over if not currently uploading/disabled
       if (!disabled) {
         setIsDragOver(true)
       }
@@ -71,6 +72,7 @@ export function UploadZone({
       setIsDragOver(false)
       setValidationError(null)
 
+      // Prevent drop if currently uploading/disabled
       if (disabled) return
 
       const files = Array.from(e.dataTransfer.files)
@@ -90,6 +92,7 @@ export function UploadZone({
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+    // Prevent file selection if currently uploading/disabled
     if (file && !disabled) {
       setValidationError(null)
       const error = validateFile(file)
@@ -101,6 +104,7 @@ export function UploadZone({
     }
   }
 
+  // When isUploading is true, show the progress card
   if (isUploading) {
     return (
       <Card className="border-2 border-emerald-200 bg-emerald-50/30">
@@ -135,6 +139,7 @@ export function UploadZone({
     )
   }
 
+  // When not uploading, show the upload zone
   return (
     <div className="space-y-4">
       {(error || validationError) && (
@@ -154,12 +159,14 @@ export function UploadZone({
         />
 
         <CardContent className="p-8 relative z-10">
-          <div
-            className={`rounded-xl p-12 text-center transition-all duration-200 ${
+          {/* The entire drag-and-drop area is now the label for the hidden input */}
+          <label
+            htmlFor="file-upload"
+            className={`rounded-xl p-12 text-center transition-all duration-200 block cursor-pointer ${
               isDragOver
                 ? "bg-emerald-50 border-2 border-emerald-500"
                 : disabled
-                  ? "bg-gray-50 opacity-50"
+                  ? "bg-gray-50 opacity-50 pointer-events-none" // Disable pointer events when the component is disabled
                   : "hover:bg-emerald-50/50"
             }`}
             onDragOver={handleDragOver}
@@ -187,32 +194,69 @@ export function UploadZone({
               onChange={handleFileSelect}
               className="hidden"
               id="file-upload"
-              disabled={disabled}
+              disabled={disabled} // This will be false when not uploading
             />
-            <label htmlFor="file-upload">
-              <Button
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg font-semibold relative overflow-hidden"
-                disabled={disabled}
-              >
+            {/* The Button is now purely visual, the label handles the click */}
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg font-semibold relative overflow-hidden"
+              disabled={disabled} // This will be false when not uploading
+              asChild // Ensure it renders as a child of the label, not a separate button
+            >
+              <span>
+                {" "}
+                {/* Wrap content in a span if Button is asChild */}
                 <FileText className="w-5 h-5 mr-2" />
                 Choose File
                 <Zap className="w-4 h-4 ml-2 opacity-70" />
-              </Button>
-            </label>
+              </span>
+            </Button>
 
-            <div className="mt-6 space-y-2">
+            <div className="mt-6 space-y-3">
               <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
                 <CheckCircle className="w-4 h-4 text-emerald-500" />
-                <span>PDF, DOC, DOCX (max 10MB) - works on any device!</span>
+                <span>PDF, DOC, DOCX (max 10MB) - all formats work great!</span>
               </div>
+
               <div className="flex items-center justify-center gap-2 text-sm text-emerald-600 font-medium">
+                <span>⚡</span>
+                <span>Enhanced PDF parsing - no more compatibility issues!</span>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 text-sm text-blue-600">
                 <span>🔒</span>
                 <span>Your CV is processed securely and never stored - promise!</span>
               </div>
             </div>
-          </div>
+          </label>
         </CardContent>
       </Card>
+
+      {/* Processing Features */}
+      <div className="grid md:grid-cols-3 gap-4 text-center">
+        <div className="p-4 bg-white/60 rounded-lg border border-emerald-100">
+          <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2">
+            <span className="text-emerald-600 text-lg">📄</span>
+          </div>
+          <h4 className="font-medium text-gray-900 text-sm mb-1">PDF Support</h4>
+          <p className="text-xs text-gray-600">Enhanced parsing engine handles all PDF types</p>
+        </div>
+
+        <div className="p-4 bg-white/60 rounded-lg border border-blue-100">
+          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+            <span className="text-blue-600 text-lg">📋</span>
+          </div>
+          <h4 className="font-medium text-gray-900 text-sm mb-1">Word Docs</h4>
+          <p className="text-xs text-gray-600">Perfect support for .doc and .docx files</p>
+        </div>
+
+        <div className="p-4 bg-white/60 rounded-lg border border-purple-100">
+          <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+            <span className="text-purple-600 text-lg">🚀</span>
+          </div>
+          <h4 className="font-medium text-gray-900 text-sm mb-1">Fast & Reliable</h4>
+          <p className="text-xs text-gray-600">Server-side processing for consistent results</p>
+        </div>
+      </div>
     </div>
   )
 }
