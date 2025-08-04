@@ -5,7 +5,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'v0 App',
-  description: 'Created with v0',
+  description: 'Upload your CV/Resume and get real',
   generator: 'v0.dev',
 }
 
