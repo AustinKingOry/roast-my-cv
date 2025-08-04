@@ -17,12 +17,14 @@ export async function parseCV(file: File): Promise<ParsedCV> {
   const fileType = file.type
   let text = ""
   let pageCount: number | undefined
+  console.log("File: ",file)
 
   try {
     if (fileType === "application/pdf") {
-      let dataBuffer = fs.readFileSync(file.name);
+      const arrayBuffer = await file.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
       // const result = await parsePDF(file)
-      const result = await pdf(dataBuffer);
+      const result = await pdf(buffer);
       text = result.text
       pageCount = result.numpages
     } else if (
