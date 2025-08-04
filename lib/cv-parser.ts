@@ -1,8 +1,6 @@
-import * as pdfjsLib from "pdfjs-dist"
 import mammoth from "mammoth"
-
-// Set up PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+import pdf from 'pdf-parse';
+import fs from 'fs';
 
 export interface ParsedCV {
   text: string
@@ -22,9 +20,11 @@ export async function parseCV(file: File): Promise<ParsedCV> {
 
   try {
     if (fileType === "application/pdf") {
-      const result = await parsePDF(file)
+      let dataBuffer = fs.readFileSync(file.name);
+      // const result = await parsePDF(file)
+      const result = await pdf(dataBuffer);
       text = result.text
-      pageCount = result.pageCount
+      pageCount = result.numpages
     } else if (
       fileType === "application/msword" ||
       fileType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -64,25 +64,25 @@ export async function parseCV(file: File): Promise<ParsedCV> {
   }
 }
 
-async function parsePDF(file: File): Promise<{ text: string; pageCount: number }> {
-  const arrayBuffer = await file.arrayBuffer()
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
-  const pageCount = pdf.numPages
+// async function parsePDF(file: File): Promise<{ text: string; pageCount: number }> {
+//   const arrayBuffer = await file.arrayBuffer()
+//   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+//   const pageCount = pdf.numPages
 
-  let fullText = ""
+//   let fullText = ""
 
-  for (let i = 1; i <= pageCount; i++) {
-    const page = await pdf.getPage(i)
-    const textContent = await page.getTextContent()
-    const pageText = textContent.items
-      .map((item: any) => item.str)
-      .join(" ")
-      .trim()
-    fullText += pageText + "\n"
-  }
+//   for (let i = 1; i <= pageCount; i++) {
+//     const page = await pdf.getPage(i)
+//     const textContent = await page.getTextContent()
+//     const pageText = textContent.items
+//       .map((item: any) => item.str)
+//       .join(" ")
+//       .trim()
+//     fullText += pageText + "\n"
+//   }
 
-  return { text: fullText, pageCount }
-}
+//   return { text: fullText, pageCount }
+// }
 
 async function parseWord(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer()
