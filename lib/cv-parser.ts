@@ -1,6 +1,5 @@
 import mammoth from "mammoth"
 import pdf from 'pdf-parse';
-import fs from 'fs';
 
 export interface ParsedCV {
   text: string
@@ -17,7 +16,6 @@ export async function parseCV(file: File): Promise<ParsedCV> {
   const fileType = file.type
   let text = ""
   let pageCount: number | undefined
-  console.log("File: ",file)
 
   try {
     if (fileType === "application/pdf") {
