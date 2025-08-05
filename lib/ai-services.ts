@@ -28,7 +28,7 @@ export async function analyzeCVWithAI(request: CVAnalysisRequest) {
     prompt: userPrompt,
     schema: CVAnalysisSchema,
     temperature: roastTone === "heavy" ? 0.8 : 0.6,
-    maxOutputTokens: 2048,
+    // maxOutputTokens: 2048,
   })
 
   return result
@@ -51,6 +51,24 @@ export async function streamCVAnalysis(request: CVAnalysisRequest) {
 
   return result
 }
+
+// export async function streamCVAnalysis(request: CVAnalysisRequest) {
+//   const { cvText, roastTone, focusAreas, showEmojis, userContext } = request
+
+//   const systemPrompt = buildSystemPrompt(roastTone, focusAreas, showEmojis, userContext)
+//   const userPrompt = buildAnalysisPrompt(cvText)
+
+//   const result = streamObject({
+//     model,
+//     system: systemPrompt,
+//     prompt: userPrompt,
+//     schema: CVAnalysisSchema,
+//     temperature: roastTone === "heavy" ? 0.8 : 0.6,
+//     maxOutputTokens: 2048,
+//   })
+
+//   return result
+// }
 
 export async function getQuickCVScore(cvText: string) {
   const prompt = buildQuickScorePrompt(cvText)
