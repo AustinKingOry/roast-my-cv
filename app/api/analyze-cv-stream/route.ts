@@ -57,59 +57,80 @@ export async function POST(request: NextRequest) {
       userContext,
     })
 
+    // console.log(result.toTextStreamResponse())
+
     // Create a custom streaming response
-    const encoder = new TextEncoder()
+    // const encoder = new TextEncoder()
 
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          // Send metadata first
-          const metadataChunk = JSON.stringify({
-            type: "metadata",
-            metadata: parsedCV.metadata,
-          })
-          controller.enqueue(encoder.encode(metadataChunk + "\n"))
+    // const stream = new ReadableStream({
+    //   async start(controller) {
+    //     try {
+    //       // Send metadata first
+    //       const metadataChunk = JSON.stringify({
+    //         type: "metadata",
+    //         metadata: parsedCV.metadata,
+    //       })
+    //       controller.enqueue(encoder.encode(metadataChunk + "\n"))
 
-          // Stream the AI response
-          for await (const chunk of result.partialObjectStream) {
-            const dataChunk = JSON.stringify({
-              type: "object",
-              object: chunk,
-            })
-            controller.enqueue(encoder.encode(dataChunk + "\n"))
-          }
+    //       // Stream the AI response
+    //       for await (const chunk of result.partialObjectStream) {
+    //         const dataChunk = JSON.stringify({
+    //           type: "object",
+    //           object: chunk,
+    //         })
+    //         controller.enqueue(encoder.encode(dataChunk + "\n"))
+    //         console.log(dataChunk);
+    //       }
 
-          // Send final usage information
-          const finalResult = await result.object
-          const usageChunk = JSON.stringify({
-            type: "finish",
-            usage: result.usage,
-            finishReason: result.finishReason,
-          })
-          controller.enqueue(encoder.encode(usageChunk + "\n"))
+    //       // Send final usage information
+    //       const finalResult = await result.object
+    //       const usageChunk = JSON.stringify({
+    //         type: "finish",
+    //         usage: result.usage,
+    //         finishReason: result.finishReason,
+    //       })
+    //       controller.enqueue(encoder.encode(usageChunk + "\n"))
 
-          controller.close()
-        } catch (error) {
-          const errorChunk = JSON.stringify({
-            type: "error",
-            error: error instanceof Error ? error.message : "Unknown error",
-          })
-          controller.enqueue(encoder.encode(errorChunk + "\n"))
-          controller.close()
-        }
-      },
-    })
+    //       controller.close()
+    //     } catch (error) {
+    //       console.error("Streaming error:", error)
+    //       const errorChunk = JSON.stringify({
+    //         type: "error",
+    //         error: error instanceof Error ? error.message : "Unknown error",
+    //       })
+    //       controller.enqueue(encoder.encode(errorChunk + "\n"))
+    //       controller.close()
+    //     }
+    //   },
+    // })
 
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "application/json",
+    // return new Response(stream, {
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     "X-CV-Metadata": JSON.stringify(parsedCV.metadata),
+    //     "Cache-Control": "no-cache",
+    //     Connection: "keep-alive",
+    //   },
+    // })
+
+    return result.toTextStreamResponse(
+      {
+        headers:{"Content-Type": "application/json",
         "X-CV-Metadata": JSON.stringify(parsedCV.metadata),
         "Cache-Control": "no-cache",
-        Connection: "keep-alive",
+        Connection: "keep-alive",}
       },
-    })
+    );
   } catch (error) {
     console.error("Error in analyze-cv-stream API:", error)
-    return new Response("Analysis failed", { status: 500 })
+    return new Response(
+      JSON.stringify({
+        error: error instanceof Error ? error.message : "Analysis failed",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    )
   }
 }
