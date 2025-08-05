@@ -15,8 +15,10 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Download, Share2, AlertCircle, RotateCcw, ChevronRight, Zap, Heart, Sparkles } from "lucide-react"
+import { Download, Share2, AlertCircle, RotateCcw, ChevronRight, Zap, Heart, Sparkles, FileCheck, Upload } from "lucide-react"
 import { string } from "zod/v4"
+import { Card, CardContent } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 
 type RoastTone = "light" | "heavy"
 
@@ -26,7 +28,7 @@ export default function RoastMyCVPage() {
   const [showEmojis, setShowEmojis] = useState(true)
   const [focusAreas, setFocusAreas] = useState<string[]>(["Content & Writing", "Format & Design"])
   const [userContext, setUserContext] = useState<UserContext>({})
-  const [useStreaming, setUseStreaming] = useState(true)
+  const [useStreaming, setUseStreaming] = useState(false)
 
   // Use either streaming or regular analysis based on user preference
   const regularAnalysis = useCVAnalysis()
@@ -144,9 +146,9 @@ Made with ❤️ for African job seekers
       {/* Subtle background pattern */}
       <div
         className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2310b981' fillOpacity='0.1'%3E%3Cpath d='M50 50c0-27.614-22.386-50-50-50v50h50zM0 50v50h50c0-27.614-22.386-50-50-50z'/%3E%3C/g%3E%3C/svg%3E")`,
-        }}
+        // style={{
+        //   backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2310b981' fillOpacity='0.1'%3E%3Cpath d='M50 50c0-27.614-22.386-50-50-50v50h50zM0 50v50h50c0-27.614-22.386-50-50-50z'/%3E%3C/g%3E%3C/svg%3E")`,
+        // }}
       />
 
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
@@ -162,14 +164,7 @@ Made with ❤️ for African job seekers
                 <span className="text-emerald-600 font-medium">CV Roaster</span>
               </div>
               <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                Roast My CV 🔥
-                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  AI SDK v5
-                </Badge>
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
-                  Made in Kenya 🇰🇪
-                </Badge>
+                Roast My CV
               </h1>
             </div>
 
@@ -191,14 +186,14 @@ Made with ❤️ for African job seekers
 
         {/* Main Content */}
         <main className="flex-1 overflow-auto">
-          <div className="max-w-6xl mx-auto p-6">
+          <div className="max-w-7xl mx-auto p-6">
             {!hasResults && !isAnalyzing && (
               <div className="grid lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
                   <div className="mb-6">
                     <h2 className="text-xl font-semibold text-gray-900 mb-2">Upload Your CV</h2>
                     <p className="text-gray-600">
-                      Get AI-powered feedback with real-time streaming analysis powered by AI SDK v5! 🇰🇪
+                      Get AI-powered feedback with real-time streaming analysis! 🇰🇪
                     </p>
                   </div>
 
@@ -206,7 +201,7 @@ Made with ❤️ for African job seekers
                     onFileUpload={handleFileUpload}
                     isUploading={isAnalyzing}
                     uploadProgress={uploadProgress}
-                    error={error ? (typeof(error) == "string" ? error : error.message) : "error"}
+                    error={error && (typeof(error) == "string" ? error : error.message)}
                     disabled={isAnalyzing}
                   />
 
@@ -303,6 +298,38 @@ Made with ❤️ for African job seekers
                   </Button>
                 </div>
               </div>
+            )}
+
+            {isAnalyzing && (
+              <Card className="border-2 border-emerald-200 bg-emerald-50/30">
+                <CardContent className="p-8">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 relative overflow-hidden">
+                      {uploadProgress < 100 ? (
+                        <Upload className="w-8 h-8 text-white animate-pulse relative z-10" />
+                      ) : (
+                        <FileCheck className="w-8 h-8 text-white relative z-10" />
+                      )}
+                      <div
+                        className="absolute inset-0 opacity-20"
+                        // style={{
+                        //   backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fff' fillOpacity='0.5'%3E%3Ccircle cx='10' cy='10' r='1'/%3E%3C/g%3E%3C/svg%3E")`,
+                        // }}
+                      />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      {uploadProgress < 100 ? "Uploading your CV... 📤" : "Processing your CV... 🔥"}
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                      {uploadProgress < 100
+                        ? "Hold tight, we're getting your file ready"
+                        : "Our AI is reading your CV and preparing some real talk"}
+                    </p>
+                    <Progress value={uploadProgress} className="w-full max-w-xs mx-auto mb-2" />
+                    <p className="text-sm text-emerald-600 font-medium">{uploadProgress}% complete</p>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {hasResults && (
