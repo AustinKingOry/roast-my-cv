@@ -4,7 +4,7 @@ import { GeistMono } from 'geist/font/mono'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'v0 App',
+  title: 'Roast My CV',
   description: 'Upload your CV/Resume and get real',
   generator: 'v0.dev',
 }

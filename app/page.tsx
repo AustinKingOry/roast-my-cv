@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Sidebar } from "@/components/layout/sidebar"
 import { UploadZone } from "@/components/roast/upload-zone"
 import { RoastSettings } from "@/components/roast/roast-settings"
@@ -19,16 +19,22 @@ import { Download, Share2, AlertCircle, RotateCcw, ChevronRight, Zap, Heart, Spa
 import { string } from "zod/v4"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { UpgradeModal } from "@/components/modals/upgrade-modal"
+import { usageTracker } from "@/lib/usage-tracker"
+import { useRouter } from "next/navigation"
 
 type RoastTone = "light" | "heavy"
 
 export default function RoastMyCVPage() {
+  const router = useRouter()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [roastTone, setRoastTone] = useState<RoastTone>("light")
   const [showEmojis, setShowEmojis] = useState(true)
   const [focusAreas, setFocusAreas] = useState<string[]>(["Content & Writing", "Format & Design"])
   const [userContext, setUserContext] = useState<UserContext>({})
   const [useStreaming, setUseStreaming] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [usage, setUsage] = useState({ count: 0, limit: 1, plan: "free" })
 
   // Use either streaming or regular analysis based on user preference
   const regularAnalysis = useCVAnalysis()
@@ -37,13 +43,46 @@ export default function RoastMyCVPage() {
   const analysis = useStreaming ? streamingAnalysis : regularAnalysis
   const { analyzeCV, isAnalyzing, result, error, uploadProgress, reset } = analysis
 
+  useEffect(() => {
+    const updateUsage = () => {
+      const currentUsage = usageTracker.getCurrentUsage()
+      setUsage(currentUsage)
+    }
+
+    updateUsage()
+    const interval = setInterval(updateUsage, 60000) // Update every minute
+
+    return () => clearInterval(interval)
+  }, [])
+
   const handleFileUpload = async (file: File) => {
+    // Check usage limit before processing
+    if (!usageTracker.canMakeRequest()) {
+      setShowUpgradeModal(true)
+      return
+    }
+
+    // Increment usage counter
+    const success = usageTracker.incrementUsage()
+    if (!success) {
+      setShowUpgradeModal(true)
+      return
+    }
+
+    // Update local usage state
+    setUsage(usageTracker.getCurrentUsage())
+
     await analyzeCV(file, {
       roastTone,
       focusAreas,
       showEmojis,
       userContext,
     })
+  }
+
+  const handleUpgrade = (plan: "hustler" | "pro") => {
+    setShowUpgradeModal(false)
+    router.push(`/payments?plan=${plan}`)
   }
 
   const handleDownload = () => {
@@ -171,14 +210,22 @@ Made with ❤️ for African job seekers
             <div className="flex items-center gap-4">
               <Badge
                 variant="outline"
-                className="bg-gradient-to-r from-emerald-50 to-blue-50 text-emerald-700 border-emerald-200"
+                className={`${
+                  usage.plan === "free"
+                    ? "bg-gray-50 text-gray-700 border-gray-200"
+                    : usage.plan === "hustler"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-purple-50 text-purple-700 border-purple-200"
+                }`}
               >
                 <Zap className="w-3 h-3 mr-1" />
-                Hustler Plan 💪
+                {usage.plan === "free" ? "Free Plan" : usage.plan === "hustler" ? "Hustler Plan 💪" : "Pro Plan 👑"}
               </Badge>
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">5 roasts remaining</p>
-                <p className="text-xs text-emerald-600">Resets in 3 days</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {usageTracker.getRemainingRequests()} roasts remaining
+                </p>
+                <p className="text-xs text-emerald-600">Resets in {usageTracker.getResetTime()}</p>
               </div>
             </div>
           </div>
@@ -436,6 +483,14 @@ Made with ❤️ for African job seekers
           </div>
         </main>
       </div>
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        currentUsage={usage.count}
+        onUpgrade={handleUpgrade}
+      />
     </div>
   )
 }
