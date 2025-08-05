@@ -211,7 +211,7 @@ Made with ❤️ for African job seekers
                   />
 
                   {/* Streaming Toggle */}
-                  <div className="mt-6 p-4 bg-white/60 rounded-lg border border-blue-100">
+                  {/* <div className="mt-6 p-4 bg-white/60 rounded-lg border border-blue-100">
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="streaming-toggle" className="text-sm font-medium text-gray-900">
@@ -223,7 +223,7 @@ Made with ❤️ for African job seekers
                       </div>
                       <Switch id="streaming-toggle" checked={useStreaming} onCheckedChange={setUseStreaming} />
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* AI SDK v5 Features */}
                   <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-lg border border-emerald-200">
